@@ -107,7 +107,7 @@ export function MarketplacePage() {
         if (ids.length) {
           const { data: prof } = await supabase
             .from('profiles')
-            .select('id,username,display_name,avatar_url')
+            .select('id,username,display_name,avatar_url,completed_deals')
             .in('id', ids)
           if (!cancelled && prof) {
             const map: Record<string, SellerProfile> = {}

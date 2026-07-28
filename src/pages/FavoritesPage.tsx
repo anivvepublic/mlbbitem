@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Heart, Loader2 } from 'lucide-react'
+import { Heart } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { MarketplaceAccountCard } from '../components/marketplace/MarketplaceAccountCard'
@@ -65,7 +65,7 @@ export function FavoritesPage() {
       if (sellerIds.length > 0) {
         const { data: profData } = await supabase
           .from('profiles')
-          .select('id, username, display_name, avatar_url')
+          .select('id, username, display_name, avatar_url, completed_deals')
           .in('id', sellerIds)
 
         if (profData) {

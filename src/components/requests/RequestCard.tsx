@@ -1,4 +1,4 @@
-import { ShoppingBag, MessageCircle, Gem, Clock } from 'lucide-react'
+import { ShoppingBag, Gem, Clock } from 'lucide-react'
 import { useInView } from '../../hooks/useInView'
 import { RANK_TIER_COLOR } from '../../lib/ranks'
 import type { AccountRequest, SellerProfile } from '../../types'
