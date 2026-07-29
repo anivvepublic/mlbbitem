@@ -49,8 +49,9 @@ export interface Offer {
   message: string | null
   status: 'pending' | 'accepted' | 'rejected' | 'withdrawn'
   created_at: string
-  account?: { id: string; title: string; price: number; image_url: string | null } | null
+  account?: { id: string; title: string; price: number; image_url: string | null; seller_id?: string } | null
   buyer?: SellerProfile | null
+  seller?: SellerProfile | null
 }
 
 export interface Deal {
@@ -61,8 +62,9 @@ export interface Deal {
   amount: number
   status: 'pending_payment' | 'paid' | 'transferred' | 'completed' | 'cancelled'
   created_at: string
-  account?: { id: string; title: string; price: number; image_url: string | null } | null
+  account?: { id: string; title: string; price: number; image_url: string | null; seller_id?: string } | null
   buyer?: SellerProfile | null
+  seller?: SellerProfile | null
 }
 
 export interface TopUp {

@@ -1,19 +1,22 @@
 import { Package, Clock } from 'lucide-react'
+import { useInView } from '../../hooks/useInView'
 import type { Deal } from '../../types'
 
 interface DealRowProps {
   deal: Deal
+  index: number
 }
 
 const STATUS_META: Record<Deal['status'], { label: string; color: string; dot: string }> = {
   pending_payment: { label: 'Ödeme Bekleniyor', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400', dot: 'bg-amber-500' },
-  paid: { label: 'Ödeme Alındı', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', dot: 'bg-blue-500' },
+  paid: { label: 'Ödeme Emanette', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', dot: 'bg-blue-500' },
   transferred: { label: 'Hesap Devredildi', color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400', dot: 'bg-purple-500' },
   completed: { label: 'Tamamlandı', color: 'bg-green-500/10 text-green-600 dark:text-green-400', dot: 'bg-green-500' },
   cancelled: { label: 'İptal', color: 'bg-gray-500/10 text-gray-500', dot: 'bg-gray-400' },
 }
 
-export function DealRow({ deal }: DealRowProps) {
+export function DealRow({ deal, index }: DealRowProps) {
+  const { ref, inView } = useInView<HTMLDivElement>()
   const acc = deal.account
   const buyer = deal.buyer
   const buyerName = buyer?.display_name || buyer?.username || 'Alıcı'
@@ -24,7 +27,13 @@ export function DealRow({ deal }: DealRowProps) {
   const dateLabel = daysAgo === 0 ? 'Bugün' : daysAgo === 1 ? 'Dün' : `${daysAgo} gün önce`
 
   return (
-    <div className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl p-[16px] hover:border-primary/50 hover:shadow-lg transition-all">
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${(index % 6) * 60}ms` }}
+      className={`bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl p-[16px] hover:border-primary hover:shadow-xl hover:-translate-y-[3px] transition-all duration-300 ${
+        inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      }`}
+    >
       <div className="flex items-start gap-[12px]">
         {acc?.image_url ? (
           <img src={acc.image_url} alt="" className="w-[52px] h-[52px] rounded-lg object-cover flex-shrink-0" />
@@ -35,9 +44,7 @@ export function DealRow({ deal }: DealRowProps) {
         )}
 
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-semibold text-dark-900 dark:text-text-light truncate">
-            {acc?.title || 'İlan'}
-          </p>
+          <p className="text-[13px] font-semibold text-dark-900 dark:text-text-light truncate">{acc?.title || 'İlan'}</p>
           <div className="flex items-center gap-[8px] mt-[3px]">
             {buyer?.avatar_url ? (
               <img src={buyer.avatar_url} alt="" className="w-[18px] h-[18px] rounded-full object-cover" />

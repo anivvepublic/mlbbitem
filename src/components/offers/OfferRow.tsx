@@ -1,14 +1,17 @@
 import { Check, X, Clock, TrendingDown, TrendingUp, Loader2 } from 'lucide-react'
+import { useInView } from '../../hooks/useInView'
 import type { Offer } from '../../types'
 
 interface OfferRowProps {
   offer: Offer
   loading: boolean
+  index: number
   onAccept: (id: string) => void
   onReject: (id: string) => void
 }
 
-export function OfferRow({ offer, loading, onAccept, onReject }: OfferRowProps) {
+export function OfferRow({ offer, loading, index, onAccept, onReject }: OfferRowProps) {
+  const { ref, inView } = useInView<HTMLDivElement>()
   const acc = offer.account
   const buyer = offer.buyer
   const buyerName = buyer?.display_name || buyer?.username || 'Alıcı'
@@ -21,9 +24,14 @@ export function OfferRow({ offer, loading, onAccept, onReject }: OfferRowProps) 
   const dateLabel = daysAgo === 0 ? 'Bugün' : daysAgo === 1 ? 'Dün' : `${daysAgo} gün önce`
 
   return (
-    <div className="group bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl p-[16px] hover:border-primary/50 hover:shadow-lg transition-all">
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${(index % 6) * 60}ms` }}
+      className={`group bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl p-[16px] hover:border-primary hover:shadow-xl hover:-translate-y-[3px] transition-all duration-300 ${
+        inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      }`}
+    >
       <div className="flex items-start gap-[12px]">
-        {/* İlan görseli */}
         {acc?.image_url ? (
           <img src={acc.image_url} alt="" className="w-[52px] h-[52px] rounded-lg object-cover flex-shrink-0" />
         ) : (
@@ -31,9 +39,7 @@ export function OfferRow({ offer, loading, onAccept, onReject }: OfferRowProps) 
         )}
 
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-semibold text-dark-900 dark:text-text-light truncate">
-            {acc?.title || 'İlan'}
-          </p>
+          <p className="text-[13px] font-semibold text-dark-900 dark:text-text-light truncate">{acc?.title || 'İlan'}</p>
           <div className="flex items-center gap-[8px] mt-[3px]">
             {buyer?.avatar_url ? (
               <img src={buyer.avatar_url} alt="" className="w-[18px] h-[18px] rounded-full object-cover" />
@@ -50,20 +56,14 @@ export function OfferRow({ offer, loading, onAccept, onReject }: OfferRowProps) 
           </div>
         </div>
 
-        {/* Teklif tutarı + fark */}
         <div className="text-right flex-shrink-0">
           <p className="font-display font-bold text-[18px] text-primary leading-none">
             {offer.amount.toLocaleString('tr-TR')}₺
           </p>
           {listPrice > 0 && diff !== 0 && (
-            <p
-              className={`text-[11px] font-semibold flex items-center justify-end gap-[3px] mt-[3px] ${
-                diff < 0 ? 'text-red-500' : 'text-green-600 dark:text-green-400'
-              }`}
-            >
+            <p className={`text-[11px] font-semibold flex items-center justify-end gap-[3px] mt-[3px] ${diff < 0 ? 'text-red-500' : 'text-green-600 dark:text-green-400'}`}>
               {diff < 0 ? <TrendingDown size={12} /> : <TrendingUp size={12} />}
-              {diffPct > 0 ? '+' : ''}
-              {diffPct}%
+              {diffPct > 0 ? '+' : ''}{diffPct}%
             </p>
           )}
         </div>
@@ -75,7 +75,6 @@ export function OfferRow({ offer, loading, onAccept, onReject }: OfferRowProps) 
         </p>
       )}
 
-      {/* Aksiyonlar */}
       <div className="flex items-center gap-[8px] mt-[14px] pt-[12px] border-t border-gray-100 dark:border-dark-700">
         <button
           onClick={() => onAccept(offer.id)}
