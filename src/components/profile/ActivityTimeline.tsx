@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useInView } from '../../hooks/useInView'
-import { Activity, CheckCircle2, Clock, Inbox } from 'lucide-react'
+import { Activity, Clock, Inbox } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 

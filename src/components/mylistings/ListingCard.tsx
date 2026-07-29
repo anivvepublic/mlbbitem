@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Eye, Pencil, Trash2, ChevronDown, HandCoins, Image as ImageIcon } from 'lucide-react'
+import { Eye, Pencil, Trash2, ChevronDown, Wallet, Image as ImageIcon } from 'lucide-react'
 import type { Account } from '../../types'
 
 interface ListingCardProps {
@@ -29,7 +29,6 @@ export function ListingCard({ account, offerCount, onEdit, onDelete, onStatus }:
 
   return (
     <div className="group bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl overflow-hidden hover:border-primary hover:shadow-xl transition-all">
-      {/* Görsel */}
       <div className="relative aspect-[16/9] bg-gray-100 dark:bg-dark-900">
         {account.image_url ? (
           <img src={account.image_url} alt={account.title} className="w-full h-full object-cover" />
@@ -43,13 +42,12 @@ export function ListingCard({ account, offerCount, onEdit, onDelete, onStatus }:
         </span>
         {offerCount > 0 && account.status === 'active' && (
           <span className="absolute top-[10px] right-[10px] flex items-center gap-[4px] px-[8px] py-[4px] bg-dark-900/85 backdrop-blur-sm text-white text-[11px] font-bold rounded-md">
-            <HandCoins size={12} className="text-primary" />
+            <Wallet size={12} className="text-primary" />
             {offerCount} teklif
           </span>
         )}
       </div>
 
-      {/* İçerik */}
       <div className="p-[14px]">
         <h3 className="font-display font-semibold text-[15px] text-dark-900 dark:text-text-light line-clamp-1 mb-[8px]">
           {account.title}
@@ -63,7 +61,6 @@ export function ListingCard({ account, offerCount, onEdit, onDelete, onStatus }:
           </span>
         </div>
 
-        {/* Aksiyonlar */}
         <div className="flex items-center gap-[6px] pt-[12px] border-t border-gray-100 dark:border-dark-700">
           <a
             href={`/account/${account.id}`}
@@ -80,7 +77,6 @@ export function ListingCard({ account, offerCount, onEdit, onDelete, onStatus }:
             Düzenle
           </button>
 
-          {/* Durum menüsü */}
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}

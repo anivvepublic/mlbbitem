@@ -26,6 +26,21 @@ export interface SellerProfile {
   created_at?: string
 }
 
+export interface AccountRequest {
+  id: string
+  user_id: string
+  title: string
+  description: string | null
+  wanted_rank: string | null
+  min_skins: number
+  budget_min: number
+  budget_max: number
+  contact_type: 'site' | 'whatsapp'
+  contact_info: string | null
+  status: 'open' | 'closed' | 'fulfilled'
+  created_at: string
+}
+
 export interface Offer {
   id: string
   account_id: string

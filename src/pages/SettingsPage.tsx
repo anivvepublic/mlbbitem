@@ -74,7 +74,6 @@ export function SettingsPage() {
         </p>
 
         <div className="space-y-[18px]">
-          {/* E-posta */}
           <SettingsSection
             icon={Mail}
             title="E-posta Adresi"
@@ -99,7 +98,6 @@ export function SettingsPage() {
             )}
           </SettingsSection>
 
-          {/* Şifre */}
           <SettingsSection
             icon={Lock}
             title="Şifre"
@@ -108,7 +106,6 @@ export function SettingsPage() {
             <PasswordForm />
           </SettingsSection>
 
-          {/* Görünüm */}
           <SettingsSection
             icon={Palette}
             title="Görünüm"
@@ -130,7 +127,6 @@ export function SettingsPage() {
             </button>
           </SettingsSection>
 
-          {/* Bildirimler */}
           <SettingsSection
             icon={Bell}
             title="Bildirim Tercihleri"
@@ -163,7 +159,6 @@ export function SettingsPage() {
             </div>
           </SettingsSection>
 
-          {/* Tehlikeli bölge */}
           <SettingsSection
             icon={AlertTriangle}
             title="Tehlikeli Bölge"
