@@ -1,39 +1,70 @@
 import { useEffect, useState } from 'react'
-import { LayoutGrid, Plus, Eye, Trash2, Pencil, Loader2 } from 'lucide-react'
+import { LayoutGrid, Plus, Loader2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import type { Account } from '../types'
+import { StatsBand } from '../components/mylistings/StatsBand'
+import { ListingCard } from '../components/mylistings/ListingCard'
+import { EditListingModal } from '../components/mylistings/EditListingModal'
+import { DeleteConfirmModal } from '../components/mylistings/DeleteConfirmModal'
 
 export function MyListingsPage() {
   const { user, loading: authLoading } = useAuth()
   const [listings, setListings] = useState<Account[]>([])
+  const [offerCounts, setOfferCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
+  const [editTarget, setEditTarget] = useState<Account | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Account | null>(null)
+
+  const fetchListings = async () => {
+    if (!user) {
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('accounts')
+      .select('*')
+      .eq('seller_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('İlanlar yüklenirken hata:', error)
+      setListings([])
+    } else {
+      const list = data || []
+      setListings(list)
+
+      // Bekleyen teklif sayılarını tek sorguda çek
+      const ids = list.map((l) => l.id)
+      if (ids.length) {
+        const { data: off } = await supabase
+          .from('offers')
+          .select('account_id')
+          .in('account_id', ids)
+          .eq('status', 'pending')
+        const map: Record<string, number> = {}
+        ;(off || []).forEach((o) => {
+          map[o.account_id] = (map[o.account_id] || 0) + 1
+        })
+        setOfferCounts(map)
+      } else {
+        setOfferCounts({})
+      }
+    }
+    setLoading(false)
+  }
 
   useEffect(() => {
-    async function fetchMyListings() {
-      if (!user) {
-        setLoading(false)
-        return
-      }
-
-      const { data, error } = await supabase
-        .from('accounts')
-        .select('*')
-        .eq('seller_id', user.id)
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        console.error('İlanlar yüklenirken hata:', error)
-      } else {
-        setListings(data || [])
-      }
-      setLoading(false)
-    }
-
-    fetchMyListings()
+    fetchListings()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
-  // Auth yükleniyorsa
+  const handleStatus = async (id: string, status: Account['status']) => {
+    await supabase.from('accounts').update({ status }).eq('id', id)
+    fetchListings()
+  }
+
   if (authLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -42,172 +73,89 @@ export function MyListingsPage() {
     )
   }
 
-  // Giriş yapmamışsa
   if (!user) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
-        <div className="w-[64px] h-[64px] rounded-full bg-gray-100 dark:bg-dark-800 flex items-center justify-center mb-4">
-          <LayoutGrid size={28} className="text-gray-400" />
-        </div>
-        <h2 className="font-display font-bold text-[22px] text-dark-900 dark:text-text-light mb-2">
-          Giriş Yapman Gerekiyor
-        </h2>
-        <p className="text-[15px] text-gray-600 dark:text-text-muted text-center max-w-[320px]">
-          İlanlarını görüntülemek ve yönetmek için önce giriş yapmalısın.
-        </p>
+      <div className="max-w-7xl mx-auto px-4 py-[64px] text-center">
+        <p className="text-gray-500 dark:text-text-muted">İlanlarını görmek için giriş yapmalısın.</p>
       </div>
     )
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-      
-      {/* Sayfa Başlığı */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="font-display font-bold text-[28px] md:text-[32px] text-dark-900 dark:text-text-light">
-            İlanlarım
-          </h1>
-          <p className="text-[15px] text-gray-600 dark:text-text-muted mt-1">
-            Tüm ilanlarını buradan yönetebilirsin.
-          </p>
-        </div>
-        <a
-          href="/create-listing"
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-[15px] clip-chamfer"
-        >
-          <Plus size={20} />
-          Yeni İlan Ekle
-        </a>
-      </div>
+    <div className="relative">
+      <div
+        className="absolute top-0 inset-x-0 h-[320px] pointer-events-none opacity-[0.10] dark:opacity-[0.16]"
+        style={{ background: 'radial-gradient(60% 100% at 50% 0%, #FF6A1F 0%, transparent 70%)' }}
+      />
 
-      {/* İstatistikler */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg p-4">
-          <p className="text-[13px] text-gray-500 dark:text-text-muted mb-1">Toplam İlan</p>
-          <p className="font-display font-bold text-[24px] text-dark-900 dark:text-text-light">
-            {listings.length}
-          </p>
-        </div>
-        <div className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg p-4">
-          <p className="text-[13px] text-gray-500 dark:text-text-muted mb-1">Aktif</p>
-          <p className="font-display font-bold text-[24px] text-green-600">
-            {listings.filter(l => l.status === 'active').length}
-          </p>
-        </div>
-        <div className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg p-4">
-          <p className="text-[13px] text-gray-500 dark:text-text-muted mb-1">Satıldı</p>
-          <p className="font-display font-bold text-[24px] text-primary">
-            {listings.filter(l => l.status === 'sold').length}
-          </p>
-        </div>
-        <div className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg p-4">
-          <p className="text-[13px] text-gray-500 dark:text-text-muted mb-1">Beklemede</p>
-          <p className="font-display font-bold text-[24px] text-yellow-600">
-            {listings.filter(l => l.status === 'pending').length}
-          </p>
-        </div>
-      </div>
-
-      {/* İlan Listesi */}
-      {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={32} className="animate-spin text-primary" />
-        </div>
-      ) : listings.length === 0 ? (
-        /* Boş Durum */
-        <div className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg p-8 md:p-12 text-center">
-          <div className="w-[72px] h-[72px] rounded-full bg-gray-100 dark:bg-dark-700 flex items-center justify-center mx-auto mb-4">
-            <LayoutGrid size={32} className="text-gray-400" />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-[28px] md:py-[40px]">
+        {/* Başlık */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-[16px] mb-[28px]">
+          <div>
+            <h1 className="font-display font-bold text-[28px] md:text-[36px] text-dark-900 dark:text-text-light">
+              İlanlarım
+            </h1>
+            <p className="text-[14px] text-gray-500 dark:text-text-muted mt-[6px]">
+              Tüm ilanlarını yönet, düzenle ve durumlarını takip et.
+            </p>
           </div>
-          <h3 className="font-display font-bold text-[20px] text-dark-900 dark:text-text-light mb-2">
-            Henüz İlanın Yok
-          </h3>
-          <p className="text-[15px] text-gray-600 dark:text-text-muted max-w-[360px] mx-auto mb-6">
-            İlk ilanını oluştur ve MLBBITEM ailesinde hesabını satmaya başla.
-          </p>
           <a
             href="/create-listing"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors text-[15px] clip-chamfer"
+            className="inline-flex items-center justify-center gap-[8px] px-[20px] py-[12px] bg-primary text-white font-display font-bold text-[15px] rounded-lg hover:bg-primary-dark hover:gap-[12px] transition-all clip-chamfer"
           >
-            <Plus size={20} />
-            İlk İlanını Oluştur
+            <Plus size={19} />
+            Yeni İlan Ekle
           </a>
         </div>
-      ) : (
-        /* İlan Kartları */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {listings.map((listing) => (
-            <div 
-              key={listing.id} 
-              className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+
+        {/* İstatistik bandı */}
+        {!loading && listings.length > 0 && <StatsBand listings={listings} />}
+
+        {/* Liste */}
+        {loading ? (
+          <div className="flex items-center justify-center py-[64px]">
+            <Loader2 size={32} className="animate-spin text-primary" />
+          </div>
+        ) : listings.length === 0 ? (
+          <div className="bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-700 rounded-xl p-[48px] text-center">
+            <div
+              className="w-[72px] h-[72px] bg-gray-50 dark:bg-dark-900 border border-gray-200 dark:border-dark-700 flex items-center justify-center mx-auto mb-[18px]"
+              style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
             >
-              {/* Görsel */}
-              <div className="aspect-video bg-gray-100 dark:bg-dark-900 relative">
-                {listing.image_url ? (
-                  <img 
-                    src={listing.image_url} 
-                    alt={listing.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <LayoutGrid size={32} />
-                  </div>
-                )}
-                {/* Durum Etiketi */}
-                <div className="absolute top-3 left-3">
-                  {listing.status === 'active' && (
-                    <span className="px-3 py-1 bg-green-600 text-white text-[12px] font-semibold rounded-full">
-                      Aktif
-                    </span>
-                  )}
-                  {listing.status === 'sold' && (
-                    <span className="px-3 py-1 bg-primary text-white text-[12px] font-semibold rounded-full">
-                      Satıldı
-                    </span>
-                  )}
-                  {listing.status === 'pending' && (
-                    <span className="px-3 py-1 bg-yellow-500 text-white text-[12px] font-semibold rounded-full">
-                      Beklemede
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* İçerik */}
-              <div className="p-4">
-                <h3 className="font-display font-semibold text-[16px] text-dark-900 dark:text-text-light mb-1 line-clamp-1">
-                  {listing.title}
-                </h3>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[13px] text-gray-500 dark:text-text-muted">
-                    {listing.rank} - {listing.skins_count} Skin
-                  </span>
-                  <span className="font-display font-bold text-[18px] text-primary">
-                    {listing.price.toLocaleString('tr-TR')} TL
-                  </span>
-                </div>
-
-                {/* Aksiyon Butonları */}
-                <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-dark-700">
-                  <button className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-[13px] font-medium text-gray-600 dark:text-text-muted hover:text-primary hover:bg-gray-50 dark:hover:bg-dark-700 rounded-lg transition-colors">
-                    <Eye size={16} />
-                    Görüntüle
-                  </button>
-                  <button className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-[13px] font-medium text-gray-600 dark:text-text-muted hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
-                    <Pencil size={16} />
-                    Düzenle
-                  </button>
-                  <button className="flex items-center justify-center gap-1 px-3 py-2 text-[13px] font-medium text-gray-600 dark:text-text-muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
+              <LayoutGrid size={30} className="text-gray-300 dark:text-dark-600" />
             </div>
-          ))}
-        </div>
-      )}
+            <h3 className="font-display font-bold text-[20px] text-dark-900 dark:text-text-light mb-[8px]">
+              Henüz İlanın Yok
+            </h3>
+            <p className="text-[14px] text-gray-500 dark:text-text-muted max-w-[340px] mx-auto mb-[22px]">
+              İlk ilanını oluştur ve hesabını güvenle satmaya başla.
+            </p>
+            <a
+              href="/create-listing"
+              className="inline-flex items-center gap-[7px] px-[20px] py-[12px] bg-primary text-white font-display font-bold text-[14px] rounded-lg hover:bg-primary-dark transition-colors clip-chamfer"
+            >
+              <Plus size={17} />
+              İlk İlanını Oluştur
+            </a>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[16px]">
+            {listings.map((l) => (
+              <ListingCard
+                key={l.id}
+                account={l}
+                offerCount={offerCounts[l.id] || 0}
+                onEdit={setEditTarget}
+                onDelete={setDeleteTarget}
+                onStatus={handleStatus}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <EditListingModal account={editTarget} onClose={() => setEditTarget(null)} onSaved={fetchListings} />
+      <DeleteConfirmModal account={deleteTarget} onClose={() => setDeleteTarget(null)} onDeleted={fetchListings} />
     </div>
   )
 }

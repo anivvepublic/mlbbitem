@@ -9,6 +9,11 @@ import { MarketplacePage } from './pages/MarketplacePage'
 import { MyListingsPage } from './pages/MyListingsPage'
 import { FavoritesPage } from './pages/FavoritesPage'
 import { RequestsPage } from './pages/RequestsPage'
+import { MyOffersPage } from './pages/MyOffersPage'
+import { WalletPage } from './pages/WalletPage'
+import { ProfilePage } from './pages/ProfilePage'
+import { SettingsPage } from './pages/SettingsPage'
+import { AccountDetailPage } from './pages/AccountDetailPage'
 import { LoginModal } from './modals/auth/LoginModal'
 import { RegisterModal } from './modals/auth/RegisterModal'
 
@@ -34,11 +39,14 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/marketplace" element={<MarketplacePage />} />
+                <Route path="/account/:id" element={<AccountDetailPage />} />
                 <Route path="/requests" element={<RequestsPage />} />
                 <Route path="/my-listings" element={<MyListingsPage />} />
-                <Route path="/profile" element={<div className="p-8 text-center">Profil Sayfası Yakında</div>} />
+                <Route path="/my-offers" element={<MyOffersPage />} />
+                <Route path="/wallet" element={<WalletPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/favorites" element={<FavoritesPage />} />
-                <Route path="/settings" element={<div className="p-8 text-center">Ayarlar Sayfası Yakında</div>} />
+                <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/create-listing" element={<div className="p-8 text-center">İlan Oluşturma Yakında</div>} />
               </Routes>
             </Layout>

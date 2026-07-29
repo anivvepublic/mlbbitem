@@ -4,12 +4,14 @@ export interface Account {
   price: number
   rank: string
   skins_count: number
+  hero_count: number
+  level: number
   server: string | null
   view_count: number
   description: string | null
   image_url: string | null
   seller_id: string
-  status: 'active' | 'sold' | 'pending'
+  status: 'active' | 'sold' | 'pending' | 'disabled'
   created_at: string
 }
 
@@ -19,20 +21,41 @@ export interface SellerProfile {
   display_name: string | null
   avatar_url: string | null
   completed_deals: number
+  bio?: string | null
+  phone?: string | null
+  created_at?: string
 }
 
-export interface AccountRequest {
+export interface Offer {
+  id: string
+  account_id: string
+  buyer_id: string
+  amount: number
+  message: string | null
+  status: 'pending' | 'accepted' | 'rejected' | 'withdrawn'
+  created_at: string
+  account?: { id: string; title: string; price: number; image_url: string | null } | null
+  buyer?: SellerProfile | null
+}
+
+export interface Deal {
+  id: string
+  account_id: string
+  buyer_id: string
+  seller_id: string
+  amount: number
+  status: 'pending_payment' | 'paid' | 'transferred' | 'completed' | 'cancelled'
+  created_at: string
+  account?: { id: string; title: string; price: number; image_url: string | null } | null
+  buyer?: SellerProfile | null
+}
+
+export interface TopUp {
   id: string
   user_id: string
-  title: string
-  description: string | null
-  wanted_rank: string | null
-  min_skins: number
-  budget_min: number
-  budget_max: number
-  contact_type: 'site' | 'whatsapp'
-  contact_info: string | null
-  status: 'open' | 'closed' | 'fulfilled'
+  amount: number
+  status: string
+  method: string
   created_at: string
 }
 
