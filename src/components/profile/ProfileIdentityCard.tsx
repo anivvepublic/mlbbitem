@@ -1,4 +1,4 @@
-import { BadgeCheck, Calendar, LayoutGrid, Trophy, Heart } from 'lucide-react'
+import { BadgeCheck, Calendar, LayoutGrid, Trophy, Heart, AtSign, Phone } from 'lucide-react'
 import type { SellerProfile } from '../../types'
 
 interface ProfileIdentityCardProps {
@@ -64,12 +64,32 @@ export function ProfileIdentityCard({
             )}
           </div>
 
-          {/* İsim + email */}
+          {/* İsim */}
           <h2 className="font-display font-bold text-[24px] text-dark-900 dark:text-text-light leading-tight truncate">
             {name}
           </h2>
-          <p className="text-[13px] text-gray-500 dark:text-text-muted truncate mt-[2px]">{email}</p>
-          <p className="flex items-center gap-[5px] text-[12px] text-gray-400 dark:text-text-muted mt-[8px]">
+
+          {/* Kullanıcı adı */}
+          {profile?.username && (
+            <p className="flex items-center gap-[4px] text-[13px] font-semibold text-primary mt-[3px]">
+              <AtSign size={13} />
+              {profile.username}
+            </p>
+          )}
+
+          {/* E-posta */}
+          <p className="text-[13px] text-gray-500 dark:text-text-muted truncate mt-[4px]">{email}</p>
+
+          {/* Telefon */}
+          {profile?.phone && (
+            <p className="flex items-center gap-[5px] text-[12px] text-gray-500 dark:text-text-muted mt-[6px]">
+              <Phone size={12} />
+              +{profile.phone}
+            </p>
+          )}
+
+          {/* Üyelik */}
+          <p className="flex items-center gap-[5px] text-[12px] text-gray-400 dark:text-text-muted mt-[6px]">
             <Calendar size={13} />
             {memberLabel}
           </p>

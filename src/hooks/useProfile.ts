@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import type { SellerProfile } from '../types'
 
 // Giris yapan kullanicinin profil satirini cekip canli tutar.
+// 'mlbb-profile-changed' olayini dinler -> profil kaydedilince
+// Header, menu ve profil sayfasi kendi kendine tazelenir.
 export function useProfile() {
   const { user } = useAuth()
   const [profile, setProfile] = useState<SellerProfile | null>(null)
@@ -23,6 +25,8 @@ export function useProfile() {
 
   useEffect(() => {
     refresh()
+    window.addEventListener('mlbb-profile-changed', refresh)
+    return () => window.removeEventListener('mlbb-profile-changed', refresh)
   }, [refresh])
 
   return { profile, refresh }

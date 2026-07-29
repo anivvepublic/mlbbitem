@@ -4,6 +4,7 @@ import { Moon, Sun, Menu, X, LogOut, User, LayoutGrid, Heart, Settings, Wallet }
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useAuthModal } from '../../context/AuthModalContext'
+import { useProfile } from '../../hooks/useProfile'
 import { useBalance } from '../../hooks/useBalance'
 import { usePendingOfferCount } from '../../hooks/usePendingOfferCount'
 import { UserDropdown } from '../ui/UserDropdown'
@@ -12,12 +13,13 @@ export function Header() {
   const { isDark, toggle } = useTheme()
   const { user, signOutUser } = useAuth()
   const { openLogin, openRegister } = useAuthModal()
+  const { profile } = useProfile()
   const { balance } = useBalance()
   const pendingOffers = usePendingOfferCount()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const displayName = user?.email ? user.email.split('@')[0] : 'Kullanıcı'
+  const displayName = profile?.display_name || profile?.username || (user?.email ? user.email.split('@')[0] : 'Kullanıcı')
   const initial = displayName.charAt(0).toUpperCase()
 
   const handleMobileSignOut = async () => {
@@ -70,11 +72,18 @@ export function Header() {
           <div className="md:hidden border-t border-gray-200 dark:border-dark-700 py-4">
             {user && (
               <div className="flex items-center gap-3 px-2 py-3 mb-3 border-b border-gray-200 dark:border-dark-700">
-                <div className="w-[40px] h-[40px] rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-display font-bold text-[16px]">{initial}</span>
-                </div>
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" className="w-[40px] h-[40px] rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-[40px] h-[40px] rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-display font-bold text-[16px]">{initial}</span>
+                  </div>
+                )}
                 <div className="min-w-0">
                   <p className="text-[14px] font-semibold text-dark-900 dark:text-text-light truncate">{displayName}</p>
+                  {profile?.username && (
+                    <p className="text-[12px] text-primary font-semibold truncate">@{profile.username}</p>
+                  )}
                   <p className="text-[12px] text-gray-500 dark:text-text-muted truncate">{user.email}</p>
                 </div>
               </div>

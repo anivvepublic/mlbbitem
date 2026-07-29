@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Camera, Save, Loader2, CheckCircle2, User, AtSign, Phone, AlignLeft } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
@@ -12,25 +12,31 @@ interface ProfileEditFormProps {
 export function ProfileEditForm({ profile, onSaved }: ProfileEditFormProps) {
   const { user } = useAuth()
   const fileRef = useRef<HTMLInputElement>(null)
-  const [displayName, setDisplayName] = useState(profile?.display_name || '')
-  const [username, setUsername] = useState(profile?.username || '')
-  const [phone, setPhone] = useState(profile?.phone || '')
-  const [bio, setBio] = useState(profile?.bio || '')
+  const [displayName, setDisplayName] = useState('')
+  const [username, setUsername] = useState('')
+  const [phone, setPhone] = useState('')
+  const [bio, setBio] = useState('')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [toast, setToast] = useState('')
 
-  // Profil degistiginde formu senkronize et
-  useState(() => {
+  // Profil (re)yu¨klendiginde formu gercek verilerle doldur.
+  // Boylece sayfaya her giriste eski bilgiler satirlarda hazir durur.
+  useEffect(() => {
     setDisplayName(profile?.display_name || '')
     setUsername(profile?.username || '')
     setPhone(profile?.phone || '')
     setBio(profile?.bio || '')
-  })
+  }, [profile])
 
   const flash = (msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(''), 2600)
+  }
+
+  const broadcast = () => {
+    // Header + menu + diger dinleyiciler tazelenir
+    window.dispatchEvent(new Event('mlbb-profile-changed'))
   }
 
   const handleAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,17 +44,28 @@ export function ProfileEditForm({ profile, onSaved }: ProfileEditFormProps) {
     if (!file || !user) return
     setUploading(true)
     const ext = file.name.split('.').pop() || 'png'
-    const path = `avatars/${user.id}/${Date.now()}.${ext}`
-    const { error: upErr } = await supabase.storage.from('mlbb-media').upload(path, file, { upsert: true })
+    // DÜZELTİLDİ: yolun ilk parçası artık senin ID'n -> Storage kuralı izin verir
+    const path = `${user.id}/avatar-${Date.now()}.${ext}`
+
+    const { error: upErr } = await supabase.storage.from('mlbb-media').upload(path, file)
     if (upErr) {
-      flash('Görsel yüklenemedi.')
+      flash('Görsel yüklenemedi: ' + upErr.message)
       setUploading(false)
       return
     }
     const { data } = supabase.storage.from('mlbb-media').getPublicUrl(path)
-    await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', user.id)
+    const { error: updErr } = await supabase
+      .from('profiles')
+      .update({ avatar_url: data.publicUrl })
+      .eq('id', user.id)
+
     setUploading(false)
+    if (updErr) {
+      flash('Fotoğraf kaydedilemedi.')
+      return
+    }
     onSaved()
+    broadcast()
     flash('Profil fotoğrafın güncellendi.')
   }
 
@@ -71,6 +88,7 @@ export function ProfileEditForm({ profile, onSaved }: ProfileEditFormProps) {
       return
     }
     onSaved()
+    broadcast()
     flash('Profilin güncellendi.')
   }
 
