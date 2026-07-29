@@ -7,7 +7,7 @@ import { useAuthModal } from '../context/AuthModalContext'
 import { useBalance } from '../hooks/useBalance'
 import { trackView } from '../lib/viewTracker'
 import { RANK_TIER_COLOR } from '../lib/ranks'
-import type { Account, SellerProfile } from '../types'
+import type { Account, AccountImage, SellerProfile } from '../types'
 import { AccountShowcase } from '../components/account/AccountShowcase'
 import { AccountStatsBar } from '../components/account/AccountStatsBar'
 import { AccountPurchasePanel } from '../components/account/AccountPurchasePanel'
@@ -27,6 +27,7 @@ export function AccountDetailPage() {
   const { balance } = useBalance()
 
   const [account, setAccount] = useState<Account | null>(null)
+  const [images, setImages] = useState<AccountImage[]>([])
   const [seller, setSeller] = useState<SellerProfile | null>(null)
   const [similar, setSimilar] = useState<Account[]>([])
   const [similarSellers, setSimilarSellers] = useState<Record<string, SellerProfile>>({})
@@ -34,6 +35,7 @@ export function AccountDetailPage() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
   const [offerOpen, setOfferOpen] = useState(false)
   const [buyOpen, setBuyOpen] = useState(false)
   const [topUpOpen, setTopUpOpen] = useState(false)
@@ -53,12 +55,17 @@ export function AccountDetailPage() {
       setAccount(data)
       trackView(data.id)
 
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('id,username,display_name,avatar_url,completed_deals,created_at')
-        .eq('id', data.seller_id)
-        .maybeSingle()
-      if (!cancelled) setSeller(prof)
+      const [{ data: prof }, { data: imgs }] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id,username,display_name,avatar_url,completed_deals,created_at')
+          .eq('id', data.seller_id)
+          .maybeSingle(),
+        supabase.from('account_images').select('*').eq('account_id', data.id).order('position'),
+      ])
+      if (cancelled) return
+      setSeller(prof)
+      setImages(imgs || [])
 
       const { data: sim } = await supabase
         .from('accounts')
@@ -140,6 +147,13 @@ export function AccountDetailPage() {
   const handleMakeOffer = () => requireAuth(() => setOfferOpen(true))
   const handleBuyNow = () => requireAuth(() => setBuyOpen(true))
   const handleTopUp = () => requireAuth(() => setTopUpOpen(true))
+  const openLightbox = (i: number) => {
+    setLightboxIndex(i)
+    setLightboxOpen(true)
+  }
+
+  const galleryUrls =
+    images.length > 0 ? images.map((im) => im.url) : account?.image_url ? [account.image_url] : []
 
   if (loading) {
     return (
@@ -184,14 +198,12 @@ export function AccountDetailPage() {
 
   return (
     <div className="relative">
-      {/* Rank rengine göre ambient üst bandı */}
       <div
         className="absolute top-0 inset-x-0 h-[420px] pointer-events-none opacity-[0.10] dark:opacity-[0.16]"
         style={{ background: `radial-gradient(60% 100% at 50% 0%, ${tierColor} 0%, transparent 70%)` }}
       />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-[24px] md:py-[32px] pb-[120px] lg:pb-[32px]">
-        {/* Breadcrumb */}
         <nav className="flex items-center gap-[8px] text-[13px] text-gray-400 dark:text-text-muted mb-[18px] flex-wrap">
           <Link to="/" className="hover:text-primary transition-colors">Ana Sayfa</Link>
           <span>/</span>
@@ -200,7 +212,6 @@ export function AccountDetailPage() {
           <span className="text-gray-600 dark:text-text-light truncate max-w-[200px]">{account.title}</span>
         </nav>
 
-        {/* Başlık + durum */}
         <div className="flex items-start justify-between gap-[16px] mb-[24px]">
           <h1 className="font-display font-bold text-[26px] md:text-[36px] text-dark-900 dark:text-text-light leading-tight">
             {account.title}
@@ -212,10 +223,9 @@ export function AccountDetailPage() {
           )}
         </div>
 
-        {/* Ana grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-[24px] lg:gap-[32px]">
           <div className="space-y-[24px] md:space-y-[28px]">
-            <AccountShowcase account={account} onZoom={() => setLightboxOpen(true)} />
+            <AccountShowcase account={account} images={images} onZoom={openLightbox} />
             <AccountStatsBar account={account} />
             <TrustStrip />
             <AccountDescription description={account.description} />
@@ -245,7 +255,7 @@ export function AccountDetailPage() {
           onToggleFavorite={() => {}}
         />
 
-        {/* MOBİL STICKY ALT BAR */}
+        {/* MOBIL STICKY ALT BAR */}
         <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 dark:bg-dark-900/95 backdrop-blur-md border-t border-gray-200 dark:border-dark-700 px-3 py-3 flex items-center gap-2">
           <div className="pr-1">
             <p className="text-[10px] text-gray-400 dark:text-text-muted leading-none mb-[2px]">Fiyat</p>
@@ -270,10 +280,11 @@ export function AccountDetailPage() {
         </div>
 
         <ImageLightboxModal
-          src={account.image_url}
-          alt={account.title}
+          images={galleryUrls}
+          index={lightboxIndex}
           open={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
+          onNavigate={setLightboxIndex}
         />
         <MakeOfferModal isOpen={offerOpen} onClose={() => setOfferOpen(false)} account={account} balance={balance} />
         <BuyNowModal isOpen={buyOpen} onClose={() => setBuyOpen(false)} account={account} balance={balance} />

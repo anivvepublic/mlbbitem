@@ -14,6 +14,7 @@ import { WalletPage } from './pages/WalletPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SettingsPage } from './pages/SettingsPage'
 import { AccountDetailPage } from './pages/AccountDetailPage'
+import { CreateListingPage } from './pages/CreateListingPage'
 import { LoginModal } from './modals/auth/LoginModal'
 import { RegisterModal } from './modals/auth/RegisterModal'
 
@@ -47,7 +48,7 @@ function App() {
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/create-listing" element={<div className="p-8 text-center">İlan Oluşturma Yakında</div>} />
+                <Route path="/create-listing" element={<CreateListingPage />} />
               </Routes>
             </Layout>
 

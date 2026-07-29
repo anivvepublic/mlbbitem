@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Moon, Sun, Menu, X, LogOut, User, LayoutGrid, Heart, Settings, Wallet } from 'lucide-react'
+import { Moon, Sun, Menu, X, LogOut, User, LayoutGrid, Heart, Settings, Wallet, Plus } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import { useAuthModal } from '../../context/AuthModalContext'
@@ -38,13 +38,23 @@ export function Header() {
             </a>
           </div>
 
-          <nav className="hidden md:flex items-center space-x-8 ml-auto mr-8">
+          <nav className="hidden md:flex items-center space-x-8 ml-auto mr-6">
             <a href="/" className="text-dark-900 dark:text-text-light hover:text-primary font-medium transition-colors text-[16px]">Ana Sayfa</a>
             <a href="/marketplace" className="text-gray-600 dark:text-text-muted hover:text-primary font-medium transition-colors text-[16px]">Hesap Pazarı</a>
             <a href="/requests" className="text-gray-600 dark:text-text-muted hover:text-primary font-medium transition-colors text-[16px]">Talep Oluştur</a>
           </nav>
 
-          <div className="flex items-center gap-3 ml-auto md:ml-0">
+          <div className="flex items-center gap-2 md:gap-3 ml-auto md:ml-0">
+            {/* BELIRGIN ILAN VER CTA */}
+            <a
+              href="/create-listing"
+              className="group relative hidden sm:flex items-center gap-[7px] px-[16px] md:px-[20px] py-[10px] md:py-[11px] bg-primary text-white font-display font-bold text-[14px] md:text-[15px] rounded-lg hover:bg-primary-dark transition-all clip-chamfer overflow-hidden"
+            >
+              <span className="absolute inset-0 -translate-x-full bg-white/20 skew-x-[-20deg] group-hover:translate-x-full transition-transform duration-700" />
+              <Plus size={18} className="relative group-hover:rotate-90 transition-transform duration-300" />
+              <span className="relative">İlan Ver</span>
+            </a>
+
             {!user && (
               <>
                 <button onClick={openLogin} className="hidden md:block px-5 py-2 border-2 border-primary text-primary font-semibold rounded-lg hover:bg-primary hover:text-white transition-colors text-[15px]">Giriş Yap</button>
@@ -62,6 +72,15 @@ export function Header() {
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
+            {/* Mobilde kompakt + butonu */}
+            <a
+              href="/create-listing"
+              className="sm:hidden w-[40px] h-[40px] rounded-lg bg-primary text-white flex items-center justify-center active:scale-95 transition-transform"
+              aria-label="İlan Ver"
+            >
+              <Plus size={22} />
+            </a>
+
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-[10px] rounded-lg bg-gray-100 dark:bg-dark-800 text-gray-600 dark:text-text-light" aria-label="Menü">
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -70,6 +89,16 @@ export function Header() {
 
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 dark:border-dark-700 py-4">
+            {/* Mobilde ustte buyuk ilan ver blogu */}
+            <a
+              href="/create-listing"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-center gap-[8px] w-full px-5 py-3 mb-3 bg-primary text-white font-display font-bold text-[15px] rounded-lg clip-chamfer"
+            >
+              <Plus size={19} />
+              İlan Ver
+            </a>
+
             {user && (
               <div className="flex items-center gap-3 px-2 py-3 mb-3 border-b border-gray-200 dark:border-dark-700">
                 {profile?.avatar_url ? (
@@ -81,9 +110,7 @@ export function Header() {
                 )}
                 <div className="min-w-0">
                   <p className="text-[14px] font-semibold text-dark-900 dark:text-text-light truncate">{displayName}</p>
-                  {profile?.username && (
-                    <p className="text-[12px] text-primary font-semibold truncate">@{profile.username}</p>
-                  )}
+                  {profile?.username && <p className="text-[12px] text-primary font-semibold truncate">@{profile.username}</p>}
                   <p className="text-[12px] text-gray-500 dark:text-text-muted truncate">{user.email}</p>
                 </div>
               </div>

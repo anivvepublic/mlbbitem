@@ -15,6 +15,15 @@ export interface Account {
   created_at: string
 }
 
+export interface AccountImage {
+  id: string
+  account_id: string
+  url: string
+  position: number
+  is_cover: boolean
+  created_at: string
+}
+
 export interface SellerProfile {
   id: string
   username: string | null
